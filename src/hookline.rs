@@ -149,7 +149,11 @@ impl HooklineApp {
             donut.age();
         }
 
-        for i in 0..self.circles.len() {
+        let L = self.circles.len();
+
+        for j in 1..=L {
+            let i = L - j;
+
             if self.circles[i].age == self.circles[i].life_time {
                 if self.circles[i].seed {
                     let x = self.circles[i].x;
@@ -164,6 +168,8 @@ impl HooklineApp {
                 self.circles.remove(i);
             }
         }
+
+        p.rect_filled(p.clip_rect().shrink(80.0), 20.0, Color32::from_rgba_unmultiplied(20, 25, 35, 180));
     }
 }
 

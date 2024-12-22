@@ -1,4 +1,4 @@
-use eframe::egui::{self, LayerId, Layout, Painter, Rect, UiBuilder};
+use eframe::egui::{self, Color32, LayerId, Layout, Painter, Rect, Style, UiBuilder};
 
 mod hookline;
 use hookline::{HooklineApp, HooklineActivity};
@@ -24,20 +24,22 @@ impl eframe::App for HooklineApp {
 
         self.donuts_bg(&draw);
 
-        /*match self.activity {
+        let clear_frame = egui::containers::Frame::dark_canvas(&Style::default()).fill(Color32::TRANSPARENT);
+
+        match self.activity {
             HooklineActivity::Browsing(_) => {
-                egui::TopBottomPanel::bottom("song-dash").exact_height(64.0).show(ctx, |ui| {
+                egui::TopBottomPanel::bottom("song-dash").frame(clear_frame).exact_height(64.0).show(ctx, |ui| {
 
                 });
 
-                egui::SidePanel::left("pages").exact_width(40.0).show(ctx, |ui| {
+                egui::SidePanel::left("pages").frame(clear_frame).exact_width(40.0).show(ctx, |ui| {
 
                 });
             },
             _ => {}
         }
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().frame(clear_frame).show(ctx, |ui| {
             let fullrect = ui.max_rect();
             let fullrect = fullrect.split_left_right_at_fraction(0.1).1;
             let fullrect = fullrect.split_left_right_at_fraction(0.9).0; // giving tje ui a hair cut :3
@@ -74,8 +76,12 @@ impl eframe::App for HooklineApp {
                     portion(ui, self);
                 });
             }
-        });*/
+        });
 
         ctx.request_repaint();
+    }
+
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        [0.0, 0.0, 0.0, 0.0]
     }
 }
