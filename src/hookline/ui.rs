@@ -33,13 +33,18 @@ impl HooklineApp {
                             },
 
                             StatusCode::OK => {
-                                app.vars.last_cred_err = String::from("Successful! Alas, rest of the app does not exist yet.");
+                                let acc_token = login.json::<SuccessfulLogin>().unwrap();
+                                app.activity = HooklineActivity::Browsing(PhishinAccount::Acc(acc_token));
                             },
 
                             _ => {
 
                             }
                         }
+                    }
+
+                    if ui.button("Listen As A Guest").clicked() {
+                        app.activity = HooklineActivity::Browsing(PhishinAccount::Guest);
                     }
                 }));
             },

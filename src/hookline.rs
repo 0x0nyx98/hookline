@@ -2,8 +2,9 @@ use core::f32;
 use std::{thread::sleep, time::Duration};
 
 use authentic::credential::JsonWebTokenCredential;
-use eframe::egui::{Color32, Painter, Pos2, Stroke};
+use eframe::egui::{Color32, Painter, Pos2, Rect, Stroke};
 use reqwest::blocking::*;
+use serde::Deserialize;
 use serde_json::Value;
 
 pub mod ui;
@@ -56,24 +57,24 @@ impl BackgroundDonut {
         self.t = self.t + 1;
     }
 
-    fn glide(&mut self) {
+    fn glide(&mut self, bounds: Rect) {
         self.x = self.x + self.vx;
         self.y = self.y + self.vy;
         
-        if self.x < -100.0 {
-            self.x = 2000.0;
+        if self.x < bounds.left() - 100.0 {
+            self.x = bounds.right() + 100.0;
         }
 
-        if self.x > 2000.0 {
-            self.x = -100.0;
+        if self.x > bounds.right() + 100.0 {
+            self.x = bounds.left() - 100.0;
         }
 
-        if self.y < -100.0 {
-            self.y = 1500.0;
+        if self.y < bounds.top() - 100.0 {
+            self.y = bounds.bottom() + 100.0;
         }
 
-        if self.y > 1500.0 {
-            self.y = -100.0;
+        if self.y > bounds.bottom() + 100.0 {
+            self.y = bounds.top() - 100.0;
         }
     }
 
@@ -106,6 +107,13 @@ impl BackgroundDonut {
             seed: true,
             balloon: 0.0
         }
+    }
+
+    fn random_in(r: Rect) -> BackgroundDonut {
+        let mut d = BackgroundDonut::random();
+        d.x = (r.width() * rand::random::<f32>() + r.left());
+        d.y = (r.height() * rand::random::<f32>() + r.top());
+        d
     }
 
     fn random_at(x: f32, y: f32) -> BackgroundDonut {
@@ -144,7 +152,7 @@ impl HooklineApp {
 
         for donut in &mut self.circles {
             p.circle_stroke(Pos2::new(donut.x, donut.y), donut.size, Stroke::new(donut.size * 0.8, red));
-            donut.glide();
+            donut.glide(p.clip_rect());
             donut.velocity_lerp();
             donut.age();
         }
@@ -217,7 +225,14 @@ pub enum HooklineActivity {
 
 pub enum PhishinAccount {
     Guest,
-    Acc(JsonWebTokenCredential),
+    Acc(SuccessfulLogin),
+}
+
+#[derive(Deserialize)]
+struct SuccessfulLogin {
+    jwt: String,
+    username: String,
+    email: String
 }
 
 pub struct Vars {
