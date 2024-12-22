@@ -3,17 +3,20 @@ use std::{thread::sleep, time::Duration};
 
 use authentic::credential::JsonWebTokenCredential;
 use eframe::egui::{Color32, Painter, Pos2, Rect, Stroke};
+use music::Year;
 use reqwest::blocking::*;
 use serde::Deserialize;
 use serde_json::Value;
 
 pub mod ui;
+pub mod music;
 
 pub struct HooklineApp {
     pub activity: HooklineActivity,
     pub client: reqwest::blocking::Client,
     pub vars: Vars,
-    circles: Vec<BackgroundDonut>
+    circles: Vec<BackgroundDonut>,
+    pub year_list: Option<Vec<Year>>
 }
 
 struct BackgroundDonut {
@@ -213,14 +216,25 @@ impl Default for HooklineApp {
                 BackgroundDonut::random(),
                 BackgroundDonut::random(),
                 BackgroundDonut::random()
-            )
+            ),
+            year_list: None
         }
     }
 }
 
 pub enum HooklineActivity {
     LoggedOut,
-    Browsing(PhishinAccount)
+    Player(PhishinAccount, PlayerActivity)
+}
+
+pub enum PlayerActivity {
+    Browsing(BrowsePage)
+}
+
+pub enum BrowsePage {
+    ByYears,
+    //InYearRange(YearRange),
+    //Show(Show)
 }
 
 pub enum PhishinAccount {

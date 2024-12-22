@@ -27,7 +27,7 @@ impl eframe::App for HooklineApp {
         let clear_frame = egui::containers::Frame::dark_canvas(&Style::default()).fill(Color32::TRANSPARENT);
 
         match self.activity {
-            HooklineActivity::Browsing(_) => {
+            HooklineActivity::Player(_, _) => {
                 egui::TopBottomPanel::bottom("song-dash").frame(clear_frame).exact_height(64.0).show(ctx, |ui| {
 
                 });

@@ -7,7 +7,7 @@ impl HooklineApp {
     pub fn display_main_panel(&mut self) -> Vec<Box<dyn FnOnce(&mut egui::Ui, &mut HooklineApp)>> {
         let mut a: Vec<Box<dyn FnOnce(&mut egui::Ui, &mut HooklineApp)>> = vec!();
 
-        match self.activity {
+        match &self.activity {
             HooklineActivity::LoggedOut => {
                 a.push(Box::new(|ui: &mut egui::Ui, app: &mut HooklineApp| {
                     ui.heading("Sign In To Phishin!");
@@ -34,7 +34,7 @@ impl HooklineApp {
 
                             StatusCode::OK => {
                                 let acc_token = login.json::<SuccessfulLogin>().unwrap();
-                                app.activity = HooklineActivity::Browsing(PhishinAccount::Acc(acc_token));
+                                app.activity = HooklineActivity::Player(PhishinAccount::Acc(acc_token), PlayerActivity::Browsing(BrowsePage::ByYears));
                             },
 
                             _ => {
@@ -44,11 +44,41 @@ impl HooklineApp {
                     }
 
                     if ui.button("Listen As A Guest").clicked() {
-                        app.activity = HooklineActivity::Browsing(PhishinAccount::Guest);
+                        app.activity = HooklineActivity::Player(PhishinAccount::Guest, PlayerActivity::Browsing(BrowsePage::ByYears));
                     }
                 }));
             },
-            _ => {}
+
+            HooklineActivity::Player(acc, p) => {
+                match p {
+                    PlayerActivity::Browsing(b) => {
+                        match b {
+                            BrowsePage::ByYears => {
+                                a.push(Box::new(|ui: &mut egui::Ui, app: &mut HooklineApp| {
+                                    match &app.year_list {
+                                        Some(yl) => {
+                                            for year in yl.iter().rev() {
+                                                ui.heading(year.period.clone());
+                                            }
+                                        },
+                                        None => {
+                                            app.year_list = Some(app.phishin_api_req("/years", serde_json::Value::Null).json::<Vec<Year>>().unwrap());
+                                        }
+                                    }
+                                }));
+                            },
+
+                            /*BrowsePage::InYearRange(yr) => {
+
+                            },
+
+                            BrowsePage::Show(show) => {
+
+                            }*/
+                        }
+                    }
+                }
+            }
         }
 
         a
