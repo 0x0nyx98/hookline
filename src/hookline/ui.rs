@@ -8,7 +8,7 @@ impl HooklineApp {
         let mut a: Vec<Box<dyn FnOnce(&mut egui::Ui, &mut HooklineApp)>> = vec!();
 
         match self.activity {
-            HooklineActivity::LoggedOut() => {
+            HooklineActivity::LoggedOut => {
                 a.push(Box::new(|ui: &mut egui::Ui, app: &mut HooklineApp| {
                     ui.heading("Sign In To Phishin!");
                 }));

@@ -1,7 +1,7 @@
-use eframe::egui::{self, Layout, Rect, UiBuilder};
+use eframe::egui::{self, LayerId, Layout, Painter, Rect, UiBuilder};
 
 mod hookline;
-use hookline::HooklineApp;
+use hookline::{HooklineApp, HooklineActivity};
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
@@ -20,6 +20,23 @@ fn main() -> eframe::Result {
 
 impl eframe::App for HooklineApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let draw = ctx.layer_painter(LayerId::background());
+
+        self.donuts_bg(&draw);
+
+        /*match self.activity {
+            HooklineActivity::Browsing(_) => {
+                egui::TopBottomPanel::bottom("song-dash").exact_height(64.0).show(ctx, |ui| {
+
+                });
+
+                egui::SidePanel::left("pages").exact_width(40.0).show(ctx, |ui| {
+
+                });
+            },
+            _ => {}
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let fullrect = ui.max_rect();
             let fullrect = fullrect.split_left_right_at_fraction(0.1).1;
@@ -57,6 +74,8 @@ impl eframe::App for HooklineApp {
                     portion(ui, self);
                 });
             }
-        });
+        });*/
+
+        ctx.request_repaint();
     }
 }
