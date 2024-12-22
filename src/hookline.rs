@@ -27,12 +27,18 @@ struct BackgroundDonut {
     t: i32,
     targ_t: i32,
 
-    size: f32
+    base_size: f32,
+    size: f32,
+    life_time: i32,
+    age: i32,
+
+    seed: bool,
+    balloon: f32
 }
 
 impl BackgroundDonut {
     fn velocity_lerp(&mut self) {
-        let lerp = 0.5 - 0.5 * f32::cos((f32::consts::PI / 2.0) * (self.t as f32 / self.targ_t as f32));
+        let lerp = 0.5 - 0.5 * f32::cos(f32::consts::PI * (self.t as f32 / self.targ_t as f32));
         self.vx = (1.0 - lerp) * self.begin_vx + lerp * self.targ_vx;
         self.vy = (1.0 - lerp) * self.begin_vy + lerp * self.targ_vy;
 
@@ -53,12 +59,38 @@ impl BackgroundDonut {
     fn glide(&mut self) {
         self.x = self.x + self.vx;
         self.y = self.y + self.vy;
+        
+        if self.x < -100.0 {
+            self.x = 2000.0;
+        }
+
+        if self.x > 2000.0 {
+            self.x = -100.0;
+        }
+
+        if self.y < -100.0 {
+            self.y = 1500.0;
+        }
+
+        if self.y > 1500.0 {
+            self.y = -100.0;
+        }
+    }
+
+    fn age(&mut self) {
+        self.age = self.age + 1;
+
+        let lerp = f32::cos((f32::consts::PI / 2.0) * (self.age as f32 / self.life_time as f32));
+
+        self.size = self.base_size * lerp * self.balloon;
+
+        self.balloon = 1.0 - ((1.0 - self.balloon) / 1.1);
     }
 
     fn random() -> BackgroundDonut {
         BackgroundDonut {
-            x: (600.0 * rand::random::<f32>() + 20.0),
-            y: (600.0 * rand::random::<f32>() + 20.0),
+            x: (1600.0 * rand::random::<f32>() + 20.0),
+            y: (1600.0 * rand::random::<f32>() + 20.0),
             vx: -2.0 + 4.0 * rand::random::<f32>(),
             vy: -2.0 + 4.0 * rand::random::<f32>(),
             begin_vx: -2.0 + 4.0 * rand::random::<f32>(),
@@ -67,9 +99,28 @@ impl BackgroundDonut {
             targ_vy: -2.0 + 4.0 * rand::random::<f32>(),
             t: 0,
             targ_t: 120,
-            size: 20.0
+            base_size: 15.0 + 20.0 * rand::random::<f32>(),
+            size: 0.0,
+            life_time: (1200.0 * rand::random::<f32>() + 600.0) as i32,
+            age: 0,
+            seed: true,
+            balloon: 0.0
         }
     }
+
+    fn random_at(x: f32, y: f32) -> BackgroundDonut {
+        let mut d = BackgroundDonut::random();
+        d.x = x;
+        d.y = y;
+        d
+    } 
+
+    fn random_not_seed_at(x: f32, y: f32) -> BackgroundDonut {
+        let mut d = BackgroundDonut::random_at(x, y);
+        d.seed = false;
+        d.life_time = (500.0 * rand::random::<f32>() + 200.0) as i32;
+        d
+    } 
 }
 
 impl HooklineApp {
@@ -95,6 +146,23 @@ impl HooklineApp {
             p.circle_stroke(Pos2::new(donut.x, donut.y), donut.size, Stroke::new(donut.size * 0.8, red));
             donut.glide();
             donut.velocity_lerp();
+            donut.age();
+        }
+
+        for i in 0..self.circles.len() {
+            if self.circles[i].age == self.circles[i].life_time {
+                if self.circles[i].seed {
+                    let x = self.circles[i].x;
+                    let y = self.circles[i].y;
+                    self.circles.push(BackgroundDonut::random_at(x, y));
+
+                    for k in 0..(5.0 * rand::random::<f32>() + 4.0) as i32 {
+                        self.circles.push(BackgroundDonut::random_not_seed_at(x, y));
+                    }
+                }
+
+                self.circles.remove(i);
+            }
         }
     }
 }
@@ -106,6 +174,22 @@ impl Default for HooklineApp {
             client: reqwest::blocking::Client::new(),
             vars: Vars::NONE,
             circles: vec!(
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
+                BackgroundDonut::random(),
                 BackgroundDonut::random(),
                 BackgroundDonut::random(),
                 BackgroundDonut::random(),
