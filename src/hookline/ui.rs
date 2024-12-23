@@ -49,9 +49,9 @@ impl HooklineApp {
                         app.activity = HooklineActivity::Player(PhishinAccount::Guest, PlayerActivity::Browsing(BrowsePage::ByYears));
 
                         for d in &mut app.circles {
-                            d.vy = -30.0;
-                            d.begin_vy = -30.0;
-                            d.targ_vy = -30.0;
+                            d.begin_vy = -80.0;
+                            d.targ_t = 120;
+                            d.t = 0;
                         }
                     }
                 }));
