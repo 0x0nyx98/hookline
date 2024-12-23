@@ -43,11 +43,7 @@ impl eframe::App for HooklineApp {
         self.bg_panel(&draw, ctx.available_rect());
 
         egui::CentralPanel::default().frame(clear_frame).show(ctx, |ui| {
-            let fullrect = ui.max_rect();
-            let fullrect = fullrect.split_left_right_at_fraction(0.1).1;
-            let fullrect = fullrect.split_left_right_at_fraction(0.9).0; // giving tje ui a hair cut :3
-            let fullrect = fullrect.split_top_bottom_at_fraction(0.1).1;
-            let fullrect = fullrect.split_top_bottom_at_fraction(0.9).0;
+            let fullrect = ctx.available_rect().shrink(80.0);
 
             let n = self.display_main_panel().len();
 
