@@ -22,10 +22,12 @@ impl HooklineApp {
                     ui.label(egui::RichText::new(&app.vars.last_cred_err).color(egui::Color32::RED));
 
                     if ui.button("Log In").clicked() {
-                        let login = app.phishin_api_req("/auth/login", json!({
-                            "email": &app.vars.cred_user.as_str(),
-                            "password": &app.vars.cred_pass.as_str(),
-                        }));
+                        let login = app.phishin_api_req(PhishinAPIRequest::demand(Method::POST, "/auth/login").with_body(
+                            json!({
+                                "email": &app.vars.cred_user.as_str(),
+                                "password": &app.vars.cred_pass.as_str(),
+                            }
+                        )));
 
                         match login.status() {
                             StatusCode::UNAUTHORIZED => {
@@ -45,6 +47,12 @@ impl HooklineApp {
 
                     if ui.button("Listen As A Guest").clicked() {
                         app.activity = HooklineActivity::Player(PhishinAccount::Guest, PlayerActivity::Browsing(BrowsePage::ByYears));
+
+                        for d in &mut app.circles {
+                            d.vy = -30.0;
+                            d.begin_vy = -30.0;
+                            d.targ_vy = -30.0;
+                        }
                     }
                 }));
             },
@@ -57,12 +65,15 @@ impl HooklineApp {
                                 a.push(Box::new(|ui: &mut egui::Ui, app: &mut HooklineApp| {
                                     match &app.year_list {
                                         Some(yl) => {
-                                            for year in yl.iter().rev() {
-                                                ui.heading(year.period.clone());
-                                            }
+                                            egui::ScrollArea::vertical().show(ui, |ui| {
+                                                for year in yl.iter().rev() {
+                                                    ui.heading(year.period.clone());
+                                                }
+                                            }); 
                                         },
                                         None => {
-                                            app.year_list = Some(app.phishin_api_req("/years", serde_json::Value::Null).json::<Vec<Year>>().unwrap());
+                                            let get_years = app.phishin_api_req(PhishinAPIRequest::demand(Method::GET, "/years"));
+                                            app.year_list = Some(get_years.json::<Vec<Year>>().unwrap());
                                         }
                                     }
                                 }));

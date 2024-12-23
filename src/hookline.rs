@@ -1,15 +1,16 @@
 use core::f32;
 use std::{thread::sleep, time::Duration};
 
-use authentic::credential::JsonWebTokenCredential;
+use api::PhishinAPIRequest;
 use eframe::egui::{Color32, Painter, Pos2, Rect, Stroke};
 use music::Year;
-use reqwest::blocking::*;
+use reqwest::{blocking::*, Method};
 use serde::Deserialize;
 use serde_json::Value;
 
 pub mod ui;
 pub mod music;
+pub mod api;
 
 pub struct HooklineApp {
     pub activity: HooklineActivity,
@@ -62,7 +63,7 @@ impl BackgroundDonut {
 
     fn glide(&mut self, bounds: Rect) {
         self.x = self.x + self.vx;
-        self.y = self.y + self.vy;
+        self.y = self.y + self.vy - 1.9;
         
         if self.x < bounds.left() - 100.0 {
             self.x = bounds.right() + 100.0;
@@ -84,7 +85,7 @@ impl BackgroundDonut {
     fn age(&mut self) {
         self.age = self.age + 1;
 
-        let lerp = f32::cos((f32::consts::PI / 2.0) * (self.age as f32 / self.life_time as f32));
+        let lerp = f32::cos((f32::consts::PI / 2.0) * (self.age as f32 / (self.life_time as f32 + if self.seed {45.0} else {0.0}))).powf(0.6);
 
         self.size = self.base_size * lerp * self.balloon;
 
@@ -105,7 +106,7 @@ impl BackgroundDonut {
             targ_t: 120,
             base_size: 15.0 + 20.0 * rand::random::<f32>(),
             size: 0.0,
-            life_time: (1200.0 * rand::random::<f32>() + 600.0) as i32,
+            life_time: (3600.0 * rand::random::<f32>() + 600.0) as i32,
             age: 0,
             seed: true,
             balloon: 0.0
@@ -135,12 +136,22 @@ impl BackgroundDonut {
 }
 
 impl HooklineApp {
-    pub fn phishin_api_req(&self, req: &str, body: Value) -> Response {
+    pub fn phishin_api_req(&self, req: PhishinAPIRequest) -> Response {
         let mut s = String::from("https://phish.in/api/v2");
-        s.push_str(req);
+        s.push_str(req.url.as_str());
 
         loop { 
-            match self.client.post(&s).json(&body).send() {
+            let helping_friendly_request = self.client.request(req.reqtype.clone(), &s).json(match req.body {
+                Some(ref b) => b,
+                None => &serde_json::Value::Null
+            });
+
+            let helping_friendly_request = match req.auth {
+                Some(ref auth) => { helping_friendly_request.header("X-Auth-Token", auth.clone()) },
+                None => helping_friendly_request
+            };
+
+            match helping_friendly_request.send() {
                 Ok(resp) => { break resp; }
                 Err(e) => { println!("retrying request to phish.in (is it down?) ..."); sleep(Duration::from_secs_f32(0.5)); }
             }
@@ -154,7 +165,7 @@ impl HooklineApp {
         p.rect_filled(p.clip_rect(), 0.0, navy);
 
         for donut in &mut self.circles {
-            p.circle_stroke(Pos2::new(donut.x, donut.y), donut.size, Stroke::new(donut.size * 0.8, red));
+            p.circle_stroke(Pos2::new(donut.x, donut.y), donut.size, Stroke::new((donut.size * 0.6) + 6.0 * (f32::min(1.0, donut.size / 8.0)), red));
             donut.glide(p.clip_rect());
             donut.velocity_lerp();
             donut.age();
@@ -179,8 +190,10 @@ impl HooklineApp {
                 self.circles.remove(i);
             }
         }
+    }
 
-        p.rect_filled(p.clip_rect().shrink(80.0), 20.0, Color32::from_rgba_unmultiplied(20, 25, 35, 180));
+    pub fn bg_panel(&mut self, p: &Painter, r: Rect) {
+        p.rect_filled(r.shrink(72.0), 20.0, Color32::from_rgba_unmultiplied(15, 15, 20, 180));
     }
 }
 

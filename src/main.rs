@@ -25,19 +25,22 @@ impl eframe::App for HooklineApp {
         self.donuts_bg(&draw);
 
         let clear_frame = egui::containers::Frame::dark_canvas(&Style::default()).fill(Color32::TRANSPARENT);
+        let dark_frame = egui::containers::Frame::dark_canvas(&Style::default()).fill(Color32::from_rgba_unmultiplied(15, 15, 20, 180));
 
         match self.activity {
             HooklineActivity::Player(_, _) => {
-                egui::TopBottomPanel::bottom("song-dash").frame(clear_frame).exact_height(64.0).show(ctx, |ui| {
+                egui::TopBottomPanel::bottom("song-dash").frame(dark_frame).exact_height(200.0).show(ctx, |ui| {
 
                 });
 
-                egui::SidePanel::left("pages").frame(clear_frame).exact_width(40.0).show(ctx, |ui| {
+                egui::SidePanel::left("pages").frame(dark_frame).exact_width(80.0).show(ctx, |ui| {
 
                 });
             },
             _ => {}
         }
+
+        self.bg_panel(&draw, ctx.available_rect());
 
         egui::CentralPanel::default().frame(clear_frame).show(ctx, |ui| {
             let fullrect = ui.max_rect();
