@@ -75,10 +75,8 @@ impl BackgroundDonut {
 
         if self.y < bounds.top() - 100.0 {
             self.y = bounds.bottom() + 100.0;
-        }
-
-        if self.y > bounds.bottom() + 100.0 {
-            self.y = bounds.top() - 100.0;
+            self.x = bounds.left() + (bounds.width() * rand::random::<f32>());
+            self.base_size = 15.0 + 20.0 * rand::random::<f32>();
         }
     }
 
